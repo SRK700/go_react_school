@@ -79,7 +79,7 @@ const User = () => {
         setEditingUser(null);
         setEditedName("");
         setEditedEmail("");
-        toast.success("การแก้ไขข้อมูลเสร็จสมบูรณ์");
+        toast.success("User updated successfully");
       } catch (error) {
         console.error(error);
       }
@@ -95,11 +95,10 @@ const User = () => {
         if (!response.ok) {
           throw new Error("Failed to delete user");
         }
-        const deletedUserId = userId;
-        const updatedUsers = users.filter((user) => user.ID !== deletedUserId);
+        const updatedUsers = users.filter((user) => user.ID !== userId);
         setUsers(updatedUsers);
         setIsConfirmingDelete(false);
-        toast.success("ลบข้อมูลผู้ใช้เรียบร้อยแล้ว");
+        toast.success("User deleted successfully");
       } catch (error) {
         console.error(error);
       }
@@ -137,7 +136,7 @@ const User = () => {
       const userData = await response.json();
       setUsers([...users, userData]);
       setNewUserData({ name: "", email: "" });
-      toast.success("เพิ่มข้อมูลผู้ใช้เรียบร้อยแล้ว");
+      toast.success("User added successfully");
       closeModal();
     } catch (error) {
       console.error(error);
@@ -145,54 +144,31 @@ const User = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-100">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Sriracha&display=swap"
-        rel="stylesheet"
-      />
-
-      <h1 className="text-3xl font-semibold mb-4 animate__animated animate__zoomInDown text-center">
-        User List
-      </h1>
-      <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg w-4/5 mx-auto bg-white">
-        <div className="flex justify-evenly bg-gray-200 p-2">
+    <div className="p-4 bg-gray-100 animate__animated animate__fadeIn">
+      <h1 className="text-3xl font-semibold mb-4 text-center">User List</h1>
+      <div className="overflow-hidden shadow-md rounded-lg w-full mx-auto bg-white">
+        <div className="p-4 bg-blue-500 text-white flex justify-between items-center">
+          <h2 className="font-semibold text-lg">Manage Users</h2>
           <button
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2"
             onClick={openModal}
+            className="bg-green-400 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300"
           >
-            เพิ่ม
+            Add New User
           </button>
         </div>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Name
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Email
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+              <th className="py-3 px-6 text-left">Name</th>
+              <th className="py-3 px-6 text-left">Email</th>
+              <th className="py-3 px-6 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {currentUsers.map((row) => (
-              <tr key={row.ID} className="hover:bg-gray-100">
+          <tbody className="text-gray-600 text-sm font-light">
+            {currentUsers.map((user) => (
+              <tr className="border-b border-gray-200 hover:bg-gray-100" key={user.ID}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {editingUser === row ? (
+                  {editingUser === user ? (
                     <input
                       type="text"
                       value={editedName}
@@ -200,11 +176,11 @@ const User = () => {
                       className="border-gray-300 rounded-md w-full"
                     />
                   ) : (
-                    row.Name
+                    user.Name
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {editingUser === row ? (
+                  {editingUser === user ? (
                     <input
                       type="text"
                       value={editedEmail}
@@ -212,57 +188,54 @@ const User = () => {
                       className="border-gray-300 rounded-md w-full"
                     />
                   ) : (
-                    row.Email
+                    user.Email
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {editingUser === row ? (
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  {editingUser === user ? (
                     <>
                       <button
                         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
                         onClick={handleSaveEdit}
                       >
-                        บันทึก
+                        Save
                       </button>
                       <button
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded ml-2"
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                         onClick={handleCancelEdit}
                       >
-                        ยกเลิก
+                        Cancel
                       </button>
                     </>
                   ) : (
                     <>
-                      {isConfirmingDelete ? null : (
-                        <button
-                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
-                          onClick={() => handleEdit(row)}
-                        >
-                          แก้ไข
-                        </button>
-                      )}
-                      {isConfirmingDelete ? (
+                      <button
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+                        onClick={() => handleEdit(user)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ${isConfirmingDelete ? 'hidden' : ''}`}
+                        onClick={() => handleDelete(user.ID)}
+                      >
+                        Delete
+                      </button>
+                      {isConfirmingDelete && (
                         <>
                           <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2 "
-                            onClick={() => handleDelete(row.ID)}
+                            className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded mr-2"
+                            onClick={() => handleDelete(user.ID)}
                           >
-                            ยืนยัน
+                            Confirm
                           </button>
                           <button
-                            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                            className="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded"
                             onClick={() => setIsConfirmingDelete(false)}
                           >
-                            ยกเลิก
+                            Cancel
                           </button>
                         </>
-                      ) : (
-                        <button
-                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2 "
-                          onClick={() => handleDelete(row.ID)}
-                        >
-                          ลบ
-                        </button>
                       )}
                     </>
                   )}
@@ -271,72 +244,71 @@ const User = () => {
             ))}
           </tbody>
         </table>
+        <div className="p-3 bg-white border-t flex justify-center">
+          <ul className="flex">
+            {Array.from({ length: Math.ceil(users.length / usersPerPage) }, (_, i) => (
+              <li key={i} className="mx-1">
+                <button
+                  onClick={() => paginate(i + 1)}
+                  className={`py-2 px-4 rounded ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                >
+                  {i + 1}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
+
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={closeModal}
-        contentLabel="เพิ่มข้อมูล"
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg"
-        overlayClassName="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 bg-opacity-50"
+        className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-30"
       >
-        <h2 className="text-2xl font-semibold mb-4">เพิ่มข้อมูล</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col space-y-2">
-            <label htmlFor="name" className="text-sm font-medium text-gray-700">
-              Name
-            </label>
+        <h2 className="font-bold text-lg mb-4">Add New User</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">Name</label>
             <input
               type="text"
               id="name"
               name="name"
-              placeholder="Enter name"
               value={newUserData.name}
               onChange={handleChange}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              placeholder="User Name"
             />
           </div>
-          <div className="flex flex-col space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
+          <div className="mb-6">
+            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">Email</label>
             <input
               type="email"
               id="email"
               name="email"
-              placeholder="Enter email"
               value={newUserData.email}
               onChange={handleChange}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              placeholder="User Email"
             />
           </div>
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            เพิ่ม
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="submit"
+            >
+              Add User
+            </button>
+            <button
+              className="bg-transparent hover:bg-gray-500 text-gray-700 font-semibold hover:text-white py-2 px-4 border border-gray-500 hover:border-transparent rounded"
+              onClick={closeModal}
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </Modal>
 
-      <div className="mt-4">
-        <ul className="flex justify-center">
-          {Array.from({ length: Math.ceil(users.length / usersPerPage) }).map(
-            (_, index) => (
-              <li key={index}>
-                <button
-                  className="bg-blue-500 hover:bg-blue-800 text-gray-800 font-semibold py-2 px-4 mx-1 rounded"
-                  onClick={() => paginate(index + 1)}
-                >
-                  {index + 1}
-                </button>
-              </li>
-            )
-          )}
-        </ul>
-      </div>
       <ToastContainer />
     </div>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../images/logo.png";
+
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
@@ -10,18 +10,13 @@ const Navbar = () => {
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl p-4">
 
           <div className="flex items-center space-x-6 rtl:space-x-reverse">
-            <a
-              href="Name"
-              className="text-sm text-white dark:text-gray-200 hover:underline"
-            >
-              UserName
-            </a>
-            <a
-              href="#"
-              className="text-sm text-blue-600 dark:text-blue-500 hover:underline"
+
+            <Link
+              to="/Login"
+              className="text-gray-900 dark:text-white hover:text-gray-600 Black:hover:text-gray-400 transition duration-300"
             >
               Login
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
@@ -31,14 +26,7 @@ const Navbar = () => {
         <div className="max-w-screen-xl px-4 py-3 mx-auto">
           <div className="flex items-center">
             <ul className="flex flex-row font-medium mt-0 space-x-8 rtl:space-x-reverse text-sm">
-              <li>
-                <Link
-                  to="/"
-                  className="text-gray-900 dark:text-white hover:text-gray-600 dark:hover:text-gray-400 transition duration-300"
-                >
-                  Home
-                </Link>
-              </li>
+
               <li>
                 <Link
                   to="/User"

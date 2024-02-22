@@ -15,13 +15,15 @@ const Student = () => {
     const [editedGrade, setEditedGrade] = useState("");
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
     const [newStudentData, setNewStudentData] = useState({
-        firstName: "",
-        lastName: "",
-        age: "",  // Initialize age as a string
-        grade: "",
+        FirstName: "",
+        LastName: "",
+        Age: "",
+        Grade: "",
     });
-
     const [modalIsOpen, setModalIsOpen] = useState(false);
+    const [editModalIsOpen, setEditModalIsOpen] = useState(false);
+    const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
+    const [deletingStudentId, setDeletingStudentId] = useState(null);
 
     useEffect(() => {
         fetchStudents();
@@ -42,38 +44,35 @@ const Student = () => {
 
     const indexOfLastStudent = currentPage * studentsPerPage;
     const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-    const currentStudents = students.slice(indexOfFirstStudent, indexOfLastStudent);
+    const currentStudents = students.slice(
+        indexOfFirstStudent,
+        indexOfLastStudent
+    );
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const handleEdit = (student) => {
         setEditingStudent(student);
-        setEditedFirstName(student.first_name);
-        setEditedLastName(student.last_name);
-        setEditedAge(student.age);
-        setEditedGrade(student.grade);
-    };
-
-    const handleCancelEdit = () => {
-        setEditingStudent(null);
-        setEditedFirstName("");
-        setEditedLastName("");
-        setEditedAge("");
-        setEditedGrade("");
+        setEditedFirstName(student.FirstName);
+        setEditedLastName(student.LastName);
+        setEditedAge(student.Age.toString());
+        setEditedGrade(student.Grade);
+        setEditModalIsOpen(true);
     };
 
     const handleSaveEdit = async () => {
         if (editingStudent) {
             const updatedStudent = {
                 ...editingStudent,
-                first_name: editedFirstName,
-                last_name: editedLastName,
-                age: editedAge,
-                grade: editedGrade,
+                FirstName: editedFirstName,
+                LastName: editedLastName,
+                Age: parseInt(editedAge),
+                Grade: editedGrade,
             };
+
             try {
                 const response = await fetch(
-                    `http://localhost:8000/students/${updatedStudent.id}`,
+                    `http://localhost:8000/students/${updatedStudent.ID}`,
                     {
                         method: "PUT",
                         headers: {
@@ -82,12 +81,14 @@ const Student = () => {
                         body: JSON.stringify(updatedStudent),
                     }
                 );
+
                 if (!response.ok) {
                     throw new Error("Failed to update student");
                 }
+
                 const updatedStudentData = await response.json();
                 const updatedStudents = students.map((student) =>
-                    student.id === updatedStudentData.id ? updatedStudentData : student
+                    student.ID === updatedStudentData.ID ? updatedStudentData : student
                 );
                 setStudents(updatedStudents);
                 setEditingStudent(null);
@@ -95,38 +96,69 @@ const Student = () => {
                 setEditedLastName("");
                 setEditedAge("");
                 setEditedGrade("");
-                toast.success("การแก้ไขข้อมูลเสร็จสมบูรณ์");
+                setEditModalIsOpen(false);
+                toast.success("Student data updated successfully");
             } catch (error) {
                 console.error(error);
             }
         }
     };
 
-
-    const handleDelete = async (studentId) => {
-        if (isConfirmingDelete) {
-            try {
-                const response = await fetch(
-                    `http://localhost:8000/students/${studentId}`,
-                    {
-                        method: "DELETE",
-                    }
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to delete student");
+    const handleDelete = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:8000/students/${deletingStudentId}`,
+                {
+                    method: "DELETE",
                 }
-                const deletedStudentId = studentId;
-                const updatedStudents = students.filter(
-                    (student) => student.id !== deletedStudentId
-                );
-                setStudents(updatedStudents);
-                setIsConfirmingDelete(false);
-                toast.success("ลบข้อมูลนักเรียนเรียบร้อยแล้ว");
-            } catch (error) {
-                console.error(error);
+            );
+            if (!response.ok) {
+                throw new Error("Failed to delete student");
             }
-        } else {
-            setIsConfirmingDelete(true);
+            const updatedStudents = students.filter(
+                (student) => student.ID !== deletingStudentId
+            );
+            setStudents(updatedStudents);
+            setDeleteModalIsOpen(false);
+            toast.success("Student data deleted successfully");
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setNewStudentData({ ...newStudentData, [name]: value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch("http://localhost:8000/students", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    FirstName: newStudentData.FirstName,
+                    LastName: newStudentData.LastName,
+                    Age: parseInt(newStudentData.Age),
+                    Grade: newStudentData.Grade,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to add student");
+            }
+
+            const studentData = await response.json();
+            setStudents([...students, studentData]);
+            setNewStudentData({ FirstName: "", LastName: "", Age: "", Grade: "" });
+            setModalIsOpen(false);
+            toast.success("Student data added successfully");
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -138,201 +170,67 @@ const Student = () => {
         setModalIsOpen(false);
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        const newValue = name === "age" ? parseInt(value, 10) : value;
-        setNewStudentData({ ...newStudentData, [name]: newValue });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch("http://localhost:8000/students", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newStudentData),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to add student");
-            }
-
-            const studentData = await response.json();
-            setStudents([...students, studentData]);
-            setNewStudentData({
-                firstName: "",
-                lastName: "",
-                age: "",
-                grade: "",
-            });
-            toast.success("เพิ่มข้อมูลนักเรียนเรียบร้อยแล้ว");
-            closeModal();
-        } catch (error) {
-            console.error(error);
-            toast.error(error.message);
-        }
-    };
-
-
-
     return (
         <div className="p-4">
             <h1 className="text-3xl font-semibold mb-4 animate__animated animate__zoomInDown text-center">
                 Student List
             </h1>
             <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg w-4/5 mx-auto">
-                <div className="flex justify-evenly">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                    <div></div>
+                <div className="flex justify-end mb-4">
                     <button
                         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2"
                         onClick={openModal}
                     >
-                        เพิ่ม
+                        Add Student
                     </button>
                 </div>
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 First Name
                             </th>
-                            <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Last Name
                             </th>
-                            <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Age
                             </th>
-                            <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Grade
                             </th>
-                            <th
-                                scope="col"
-                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                            >
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
                             </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {currentStudents.map((row) => (
-                            <tr key={row.ID} className="hover:bg-gray-100">
+                        {currentStudents.map((student) => (
+                            <tr key={student.ID} className="hover:bg-gray-100">
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingStudent === row ? (
-                                        <input
-                                            type="text"
-                                            value={editedFirstName}
-                                            onChange={(e) => setEditedFirstName(e.target.value)}
-                                            className="border-gray-300 rounded-md w-full"
-                                        />
-                                    ) : (
-                                        row.FirstName
-                                    )}
+                                    {student.FirstName}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingStudent === row ? (
-                                        <input
-                                            type="text"
-                                            value={editedLastName}
-                                            onChange={(e) => setEditedLastName(e.target.value)}
-                                            className="border-gray-300 rounded-md w-full"
-                                        />
-                                    ) : (
-                                        row.LastName
-                                    )}
+                                    {student.LastName}
                                 </td>
+                                <td className="px-6 py-4 whitespace-nowrap">{student.Age}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{student.Grade}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingStudent === row ? (
-                                        <input
-                                            type="text"
-                                            value={editedAge}
-                                            onChange={(e) => setEditedAge(e.target.value)}
-                                            className="border-gray-300 rounded-md w-full"
-                                        />
-                                    ) : (
-                                        row.Age
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingStudent === row ? (
-                                        <input
-                                            type="text"
-                                            value={editedGrade}
-                                            onChange={(e) => setEditedGrade(e.target.value)}
-                                            className="border-gray-300 rounded-md w-full"
-                                        />
-                                    ) : (
-                                        row.Grade
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    {editingStudent === row ? (
-                                        <>
-                                            <button
-                                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
-                                                onClick={handleSaveEdit}
-                                            >
-                                                บันทึก
-                                            </button>
-                                            <button
-                                                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded ml-2"
-                                                onClick={handleCancelEdit}
-                                            >
-                                                ยกเลิก
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {isConfirmingDelete ? null : (
-                                                <button
-                                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
-                                                    onClick={() => handleEdit(row)}
-                                                >
-                                                    แก้ไข
-                                                </button>
-                                            )}
-                                            {isConfirmingDelete ? (
-                                                <>
-                                                    <button
-                                                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2"
-                                                        onClick={() => handleDelete(row.ID)}
-                                                    >
-                                                        ยืนยัน
-                                                    </button>
-                                                    <button
-                                                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                                                        onClick={() => setIsConfirmingDelete(false)}
-                                                    >
-                                                        ยกเลิก
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <button
-                                                    className="bg-red-500 hover.bg-red-700 text-white font-bold py-2 px-4 rounded mr-2"
-                                                    onClick={() => handleDelete(row.ID)}
-                                                >
-                                                    ลบ
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
+                                    <button
+                                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+                                        onClick={() => handleEdit(student)}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                        onClick={() => {
+                                            setDeletingStudentId(student.ID);
+                                            setDeleteModalIsOpen(true);
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -342,73 +240,73 @@ const Student = () => {
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                contentLabel="เพิ่มข้อมูล"
+                contentLabel="Add Student"
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg"
                 overlayClassName="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 bg-opacity-50"
             >
-                <h2 className="text-2xl font-semibold mb-4">เพิ่มข้อมูล</h2>
+                <h2 className="text-2xl font-semibold mb-4">Add Student</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="flex flex-col space-y-2">
                         <label
-                            htmlFor="firstName"
+                            htmlFor="FirstName"
                             className="text-sm font-medium text-gray-700"
                         >
                             First Name
                         </label>
                         <input
                             type="text"
-                            id="firstName"
-                            name="firstName"
+                            id="FirstName"
+                            name="FirstName"
                             placeholder="Enter first name"
-                            value={newStudentData.firstName}
+                            value={newStudentData.FirstName}
                             onChange={handleChange}
                             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div className="flex flex-col space-y-2">
                         <label
-                            htmlFor="lastName"
+                            htmlFor="LastName"
                             className="text-sm font-medium text-gray-700"
                         >
                             Last Name
                         </label>
                         <input
                             type="text"
-                            id="lastName"
-                            name="lastName"
+                            id="LastName"
+                            name="LastName"
                             placeholder="Enter last name"
-                            value={newStudentData.lastName}
+                            value={newStudentData.LastName}
                             onChange={handleChange}
                             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div className="flex flex-col space-y-2">
-                        <label htmlFor="age" className="text-sm font-medium text-gray-700">
+                        <label htmlFor="Age" className="text-sm font-medium text-gray-700">
                             Age
                         </label>
                         <input
-                            type="text"
-                            id="age"
-                            name="age"
-                            placeholder="Enter age"
-                            value={newStudentData.age}
+                            type="number"
+                            id="Age"
+                            name="Age"
+                            placeholder="Enter Age"
+                            value={newStudentData.Age}
                             onChange={handleChange}
                             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div className="flex flex-col space-y-2">
                         <label
-                            htmlFor="grade"
+                            htmlFor="Grade"
                             className="text-sm font-medium text-gray-700"
                         >
                             Grade
                         </label>
                         <input
                             type="text"
-                            id="grade"
-                            name="grade"
-                            placeholder="Enter grade"
-                            value={newStudentData.grade}
+                            id="Grade"
+                            name="Grade"
+                            placeholder="Enter Grade"
+                            value={newStudentData.Grade}
                             onChange={handleChange}
                             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
@@ -417,25 +315,142 @@ const Student = () => {
                         type="submit"
                         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     >
-                        เพิ่ม
+                        Add
                     </button>
                 </form>
             </Modal>
-
+            <Modal
+                isOpen={editModalIsOpen}
+                onRequestClose={() => setEditModalIsOpen(false)}
+                contentLabel="Edit Student"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg"
+                overlayClassName="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 bg-opacity-50"
+            >
+                <h2 className="text-2xl font-semibold mb-4">Edit Student</h2>
+                <form onSubmit={handleSaveEdit} className="space-y-4">
+                    <div className="flex flex-col space-y-2">
+                        <label
+                            htmlFor="edit-FirstName"
+                            className="text-sm font-medium text-gray-700"
+                        >
+                            First Name
+                        </label>
+                        <input
+                            type="text"
+                            id="edit-FirstName"
+                            name="edit-FirstName"
+                            value={editedFirstName}
+                            onChange={(e) => setEditedFirstName(e.target.value)}
+                            className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                        <label
+                            htmlFor="edit-LastName"
+                            className="text-sm font-medium text-gray-700"
+                        >
+                            Last Name
+                        </label>
+                        <input
+                            type="text"
+                            id="edit-LastName"
+                            name="edit-LastName"
+                            value={editedLastName}
+                            onChange={(e) => setEditedLastName(e.target.value)}
+                            className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                        <label
+                            htmlFor="edit-Age"
+                            className="text-sm font-medium text-gray-700"
+                        >
+                            Age
+                        </label>
+                        <input
+                            type="number"
+                            id="edit-Age"
+                            name="edit-Age"
+                            value={editedAge}
+                            onChange={(e) => setEditedAge(e.target.value)}
+                            className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                        <label
+                            htmlFor="edit-Grade"
+                            className="text-sm font-medium text-gray-700"
+                        >
+                            Grade
+                        </label>
+                        <input
+                            type="text"
+                            id="edit-Grade"
+                            name="edit-Grade"
+                            value={editedGrade}
+                            onChange={(e) => setEditedGrade(e.target.value)}
+                            className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="bg-green-500 hover.bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Save
+                    </button>
+                    <button
+                        type="button"
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        onClick={() => {
+                            setEditModalIsOpen(false);
+                            setEditedFirstName("");
+                            setEditedLastName("");
+                            setEditedAge("");
+                            setEditedGrade("");
+                        }}
+                    >
+                        Cancel
+                    </button>
+                </form>
+            </Modal>
+            <Modal
+                isOpen={deleteModalIsOpen}
+                onRequestClose={() => setDeleteModalIsOpen(false)}
+                contentLabel="Confirm Delete"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg"
+                overlayClassName="fixed top-0 left-0 right-0 bottom-0 bg-gray-800 bg-opacity-50"
+            >
+                <h2 className="text-2xl font-semibold mb-4">Confirm Delete</h2>
+                <p>Are you sure you want to delete this student?</p>
+                <div className="flex justify-center mt-4">
+                    <button
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2"
+                        onClick={handleDelete}
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        onClick={() => setDeleteModalIsOpen(false)}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </Modal>
             <div className="mt-4">
                 <ul className="flex justify-center">
-                    {Array.from({ length: Math.ceil(students.length / studentsPerPage) }).map(
-                        (_, index) => (
-                            <li key={index}>
-                                <button
-                                    className="bg-blue-500 hover:bg-blue-800 text-gray-800 font-semibold py-2 px-4 mx-1 rounded"
-                                    onClick={() => paginate(index + 1)}
-                                >
-                                    {index + 1}
-                                </button>
-                            </li>
-                        )
-                    )}
+                    {Array.from({
+                        length: Math.ceil(students.length / studentsPerPage),
+                    }).map((_, index) => (
+                        <li key={index}>
+                            <button
+                                className="bg-blue-500 hover:bg-blue-800 text-gray-800 font-semibold py-2 px-4 mx-1 rounded"
+                                onClick={() => paginate(index + 1)}
+                            >
+                                {index + 1}
+                            </button>
+                        </li>
+                    ))}
                 </ul>
             </div>
             <ToastContainer />
