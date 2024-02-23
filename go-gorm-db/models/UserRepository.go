@@ -2,10 +2,11 @@
 package models
 
 import (
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"fmt"
+
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // สร้าง struct ชื่อ UserRepository ที่มีฟิลด์ชื่อ Db เป็น pointer ของ gorm.DB

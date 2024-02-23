@@ -2,8 +2,9 @@ package db
 
 import (
 	"fmt"
-	"gorm.io/gorm"
+
 	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func ConnectDatabase(dbType, dbUser, dbPassword, dbHost, dbPort, dbName string) (*gorm.DB, error) {

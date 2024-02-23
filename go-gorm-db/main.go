@@ -2,15 +2,16 @@
 package main
 
 import (
-	"github.com/1xe1/go-gorm-db/db"
-	"github.com/1xe1/go-gorm-db/models"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/SRK700/go-gorm-db/db"
+	"github.com/SRK700/go-gorm-db/models"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
